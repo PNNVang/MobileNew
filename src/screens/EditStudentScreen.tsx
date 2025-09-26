@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Image, TextInput, Alert, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import ImagePicker from '../components/ImagePicker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { styles } from '../styles/editStudentStyles.ts';
 
 const EditStudentScreen = () => {
@@ -30,7 +30,7 @@ const EditStudentScreen = () => {
         phone: student.phone || '',
         className: student.className || '',
         gpa: student.gpa ? student.gpa.toString() : '',
-        imageUrl: student.imageUrl || '',
+        imageUrl: student.avatar || '',
       });
     }
   }, [student]);
@@ -44,12 +44,19 @@ const EditStudentScreen = () => {
     });
   };
 
- //
-  const handleImageSelected = (imageUrl: string) => {
-    setStudentInfo({
-      ...studentInfo,
-      imageUrl: imageUrl,
+  // Mở thư viện xử lý chọn ảnh
+  const handleChoosePhoto = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 1,
     });
+
+    if (result.assets && result.assets.length > 0) {
+      setStudentInfo({
+        ...studentInfo,
+        imageUrl: result.assets[0].uri || '',
+      });
+    }
   };
 
   const validateEmail = (email: string) => {
@@ -91,8 +98,14 @@ const EditStudentScreen = () => {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...studentInfo,
+        id: studentInfo.id,
+        mssv: studentInfo.mssv,
+        name: studentInfo.name,
+        email: studentInfo.email,
+        phone: studentInfo.phone,
+        className: studentInfo.className,
         gpa: studentInfo.gpa ? parseFloat(studentInfo.gpa) : null,
+        avatar: studentInfo.imageUrl,
       }),
     })
       .then((res) => {
@@ -113,16 +126,35 @@ const EditStudentScreen = () => {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={styles.container}>
-          {/* Ảnh đại diện */}
-          <ImagePicker
-            onImageSelected={handleImageSelected}
-            currentImage={studentInfo.imageUrl}
-            placeholderText="Chọn ảnh đại diện"
-          />
+      {/* Chọn ảnh đại diện */}
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <TouchableOpacity onPress={handleChoosePhoto}>
+          {studentInfo.imageUrl ? (
+            <Image
+              source={{ uri: studentInfo.imageUrl }}
+              style={{ width: 120, height: 120, borderRadius: 60 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                borderWidth: 1,
+                borderColor: '#ccc',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text>Chọn ảnh đại diện</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
           {/* Form */}
           <View style={styles.formContainer}>
@@ -223,8 +255,8 @@ const EditStudentScreen = () => {
               <Text style={styles.cancelButtonText}>Hủy</Text>
             </TouchableOpacity>
           </View>
-        </View>
       </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 };

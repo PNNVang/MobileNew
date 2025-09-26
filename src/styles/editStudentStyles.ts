@@ -29,33 +29,39 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd'
   },
-  multilineInput: {
-    height: 80,
-    textAlignVertical: 'top'
-  },
-  submitButton: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10
-  },
-  submitButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold'
-  },
-  cancelButton: {
-    backgroundColor: '#f44336',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  }
+   actionButtonsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 16,
+    },
+       submitButton: {
+         minWidth: 140,
+         backgroundColor: '#3498db',
+         paddingVertical: 15,
+         paddingHorizontal: 24,
+         borderRadius: 8,
+         alignItems: 'center',
+       },
+       submitButtonText: {
+         color: 'white',
+         fontSize: 16,
+         fontWeight: 'bold'
+       },
+         cancelButton: {
+           minWidth: 100,
+           backgroundColor: '#e31c1c',
+           paddingVertical: 15,
+           paddingHorizontal: 20,
+           borderRadius: 8,
+           alignItems: 'center',
+           borderWidth: 1,
+           borderColor: '#ddd',
+         },
+         cancelButtonText: {
+           color: 'white',
+           fontSize: 16,
+           fontWeight: 'bold'
+         },
 
 });

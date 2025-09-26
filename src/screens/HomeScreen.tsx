@@ -63,6 +63,7 @@ const HomeScreen = () => {
 
   // áp dụng lọc
   const getFilteredStudents = () => {
+    if (!Array.isArray(students)) return [];
     if (!filterType) return students;
     if (filterType === 'name') {
       return [...students].sort((a, b) => a.name.localeCompare(b.name));
