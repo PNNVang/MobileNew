@@ -56,27 +56,30 @@ const HomeScreen = () => {
 
   // xử lý lọc
   const handleFilter = (type: string) => {
-    setFilterType(type);
+    if (type === "gpa") {
+      fetchTopStudents();
+      setFilterType("gpa");
+    } else if (type === "name") {
+      setFilterType("name");
+    }
     setShowFilterMenu(false);
   };
 
   const clearFilter = () => {
     setFilterType(null);
+    fetchStudents();
     setShowFilterMenu(false);
   };
 
-  // áp dụng lọc
   const getFilteredStudents = () => {
     if (!Array.isArray(students)) return [];
     if (!filterType) return students;
-    if (filterType === 'name') {
+    if (filterType === "name") {
       return [...students].sort((a, b) => a.name.localeCompare(b.name));
     }
-    if (filterType === 'gpa') {
-      return [...students].sort((a, b) => b.gpa - a.gpa);
-    }
-    return students;
+    return students; // GPA cao nhất đã lấy từ API
   };
+
 
 const [searchQuery, setSearchQuery] = useState("");
   // 🆕 Hàm tìm kiếm theo MSSV hoặc Tên
@@ -127,6 +130,18 @@ const [searchQuery, setSearchQuery] = useState("");
           Alert.alert("Lỗi", "Không thể tải dữ liệu xếp loại");
         }
       };
+
+      // gọi API lọc theo GPA
+      const fetchTopStudents = async () => {
+        try {
+          const res = await axios.get("http://10.0.2.2:8080/api/students/top-gpa");
+          setStudents(res.data);
+        } catch (err) {
+          console.error("API error:", err);
+          Alert.alert("Lỗi", "Không thể tải danh sách Top GPA");
+        }
+      };
+
 
   return (
     <View style={styles.container}>
