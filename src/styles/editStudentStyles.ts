@@ -39,11 +39,23 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
-    marginBottom: 30
+    marginBottom: 10
   },
   submitButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold'
+  },
+  cancelButton: {
+    backgroundColor: '#f44336',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   }
+
 });
