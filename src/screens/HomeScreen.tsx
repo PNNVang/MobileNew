@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { styles } from '../styles/homeStyles.ts';
 
@@ -33,9 +33,11 @@ const HomeScreen = () => {
       });
   };
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
+   useFocusEffect(
+      useCallback(() => {
+        fetchStudents();
+      }, [])
+    );
 
   // popup chi tiết
   const openStudentDetail = (student: any) => {
@@ -71,13 +73,62 @@ const HomeScreen = () => {
     return students;
   };
 
+const [searchQuery, setSearchQuery] = useState("");
+  // 🆕 Hàm tìm kiếm theo MSSV hoặc Tên
+      const handleSearch = () => {
+        if (!searchQuery.trim()) {
+          // Nếu trống → load lại danh sách
+          setLoading(true);
+          fetch("http://10.0.2.2:8080/api/students")
+            .then((res) => res.json())
+            .then((data) => setStudents(data))
+            .catch((err) => console.error("Lỗi load danh sách:", err))
+            .finally(() => setLoading(false));
+          return;
+        }
+
+        //  Tìm kiếm MSSV
+        if (/^\d+$/.test(searchQuery.trim())) {
+          setLoading(true);
+          fetch(`http://10.0.2.2:8080/api/students/mssv/${searchQuery}`)
+            .then((res) => {
+              if (res.status === 404) return null;
+              return res.json();
+            })
+            .then((data) => {
+              if (data) setStudents([data]); // wrap vào mảng
+              else setStudents([]);
+            })
+            .catch((err) => console.error("Lỗi tìm theo MSSV:", err))
+            .finally(() => setLoading(false));
+        } else {
+          // Tìm kiếm theo tên
+          setLoading(true);
+          fetch(`http://10.0.2.2:8080/api/students/search?name=${searchQuery}`)
+            .then((res) => res.json())
+            .then((data) => setStudents(data))
+            .catch((err) => console.error("Lỗi tìm theo tên:", err))
+            .finally(() => setLoading(false));
+        }
+      };
+
   return (
     <View style={styles.container}>
       {/* Thanh tìm kiếm */}
       <View style={styles.searchContainer}>
-        <Image source={require('../../assets/icons/search.png')} style={{ width: 20, height: 20, marginRight: 8 }} />
-        <TextInput style={styles.searchStudent} placeholder="Nhập mã số sinh viên" />
-      </View>
+            <Image
+              source={require("../../assets/icons/search.png")}
+              style={{ width: 20, height: 20, marginRight: 8 }}
+            />
+            <TextInput
+              style={styles.searchStudent}
+              placeholder="Nhập MSSV hoặc tên sinh viên"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+            />
+          </View>
 
       <ScrollView style={styles.listContainer}>
         {/* Header + nút lọc */}
