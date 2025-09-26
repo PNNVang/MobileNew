@@ -19,6 +19,10 @@ const HomeScreen = () => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
+  // state thống kê
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+
   // gọi API lấy danh sách sinh viên
   const fetchStudents = () => {
     // ⚠️ nếu chạy trên emulator Android dùng 10.0.2.2 thay cho localhost
@@ -110,6 +114,17 @@ const [searchQuery, setSearchQuery] = useState("");
             .then((data) => setStudents(data))
             .catch((err) => console.error("Lỗi tìm theo tên:", err))
             .finally(() => setLoading(false));
+        }
+      };
+
+      // Gọi API thống kê
+      const fetchClassification = async () => {
+        try {
+          const res = await axios.get('http://10.0.2.2:8080/api/students/stats/classification');
+          setStats(res.data);
+        } catch (err) {
+          console.error(err);
+          Alert.alert("Lỗi", "Không thể tải dữ liệu xếp loại");
         }
       };
 
@@ -280,6 +295,39 @@ const [searchQuery, setSearchQuery] = useState("");
         </View>
       </Modal>
 
+    {/* Nút xem thống kê */}
+          <TouchableOpacity
+            style={styles.statsButton}
+            onPress={() => {
+              fetchClassification();
+              setShowStats(true);
+            }}
+          >
+            <Text style={styles.statsButtonText}>Xem thống kê</Text>
+          </TouchableOpacity>
+
+          {/* Modal thống kê */}
+          <Modal visible={showStats} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Thống kê xếp loại</Text>
+                {stats && (
+                  <View style={styles.modalBody}>
+                    <Text>Xuất sắc: {stats["Xuất sắc"]}</Text>
+                    <Text>Giỏi: {stats["Giỏi"]}</Text>
+                    <Text>Khá: {stats["Khá"]}</Text>
+                    <Text>Trung bình/Yếu: {stats["Trung bình/Yếu"]}</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => setShowStats(false)}
+                >
+                  <Text style={styles.closeModalText}>Đóng</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
       {/* nút thêm sinh viên */}
       <TouchableOpacity
         style={styles.addStudent}
