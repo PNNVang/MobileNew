@@ -308,4 +308,36 @@ export const styles = StyleSheet.create({
          gap: 12,
        },
 
+statsButton: {
+  position: 'absolute',
+  left: 20,
+  bottom: 20,
+  backgroundColor: '#4CAF50',
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 30,
+  elevation: 4,
+},
+statsButtonText: {
+  color: 'white',
+  fontWeight: 'bold',
+  fontSize: 16,
+},
+
+statsButton: {
+  position: 'absolute',
+  left: 20,
+  bottom: 20,
+  backgroundColor: '#4CAF50',
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 30,
+  elevation: 4,
+},
+statsButtonText: {
+  color: 'white',
+  fontWeight: 'bold',
+  fontSize: 16,
+},
+
 });

@@ -19,6 +19,10 @@ const HomeScreen = () => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
+  // state thống kê
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+
   // gọi API lấy danh sách sinh viên
   const fetchStudents = () => {
     // ⚠️ nếu chạy trên emulator Android dùng 10.0.2.2 thay cho localhost
@@ -52,27 +56,30 @@ const HomeScreen = () => {
 
   // xử lý lọc
   const handleFilter = (type: string) => {
-    setFilterType(type);
+    if (type === "gpa") {
+      fetchTopStudents();
+      setFilterType("gpa");
+    } else if (type === "name") {
+      setFilterType("name");
+    }
     setShowFilterMenu(false);
   };
 
   const clearFilter = () => {
     setFilterType(null);
+    fetchStudents();
     setShowFilterMenu(false);
   };
 
-  // áp dụng lọc
   const getFilteredStudents = () => {
     if (!Array.isArray(students)) return [];
     if (!filterType) return students;
-    if (filterType === 'name') {
+    if (filterType === "name") {
       return [...students].sort((a, b) => a.name.localeCompare(b.name));
     }
-    if (filterType === 'gpa') {
-      return [...students].sort((a, b) => b.gpa - a.gpa);
-    }
-    return students;
+    return students; // GPA cao nhất đã lấy từ API
   };
+
 
 const [searchQuery, setSearchQuery] = useState("");
   // 🆕 Hàm tìm kiếm theo MSSV hoặc Tên
@@ -112,6 +119,29 @@ const [searchQuery, setSearchQuery] = useState("");
             .finally(() => setLoading(false));
         }
       };
+
+      // Gọi API thống kê
+      const fetchClassification = async () => {
+        try {
+          const res = await axios.get('http://10.0.2.2:8080/api/students/stats/classification');
+          setStats(res.data);
+        } catch (err) {
+          console.error(err);
+          Alert.alert("Lỗi", "Không thể tải dữ liệu xếp loại");
+        }
+      };
+
+      // gọi API lọc theo GPA
+      const fetchTopStudents = async () => {
+        try {
+          const res = await axios.get("http://10.0.2.2:8080/api/students/top-gpa");
+          setStudents(res.data);
+        } catch (err) {
+          console.error("API error:", err);
+          Alert.alert("Lỗi", "Không thể tải danh sách Top GPA");
+        }
+      };
+
 
   return (
     <View style={styles.container}>
@@ -280,6 +310,39 @@ const [searchQuery, setSearchQuery] = useState("");
         </View>
       </Modal>
 
+    {/* Nút xem thống kê */}
+          <TouchableOpacity
+            style={styles.statsButton}
+            onPress={() => {
+              fetchClassification();
+              setShowStats(true);
+            }}
+          >
+            <Text style={styles.statsButtonText}>Xem thống kê</Text>
+          </TouchableOpacity>
+
+          {/* Modal thống kê */}
+          <Modal visible={showStats} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Thống kê xếp loại</Text>
+                {stats && (
+                  <View style={styles.modalBody}>
+                    <Text>Xuất sắc: {stats["Xuất sắc"]}</Text>
+                    <Text>Giỏi: {stats["Giỏi"]}</Text>
+                    <Text>Khá: {stats["Khá"]}</Text>
+                    <Text>Trung bình/Yếu: {stats["Trung bình/Yếu"]}</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => setShowStats(false)}
+                >
+                  <Text style={styles.closeModalText}>Đóng</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
       {/* nút thêm sinh viên */}
       <TouchableOpacity
         style={styles.addStudent}
