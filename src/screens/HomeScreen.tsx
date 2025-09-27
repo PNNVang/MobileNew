@@ -75,7 +75,11 @@ const HomeScreen = () => {
     if (!Array.isArray(students)) return [];
     if (!filterType) return students;
     if (filterType === "name") {
-      return [...students].sort((a, b) => a.name.localeCompare(b.name));
+      return [...students].sort((a, b) => {
+        const lastNameA = a.name.trim().split(" ").slice(-1)[0];
+        const lastNameB = b.name.trim().split(" ").slice(-1)[0];
+        return lastNameA.localeCompare(lastNameB);
+      });
     }
     return students; // GPA cao nhất đã lấy từ API
   };
@@ -180,7 +184,7 @@ const [searchQuery, setSearchQuery] = useState("");
           <View style={styles.filterMenuOverlay}>
             <View style={styles.filterMenu}>
               <TouchableOpacity style={styles.filterOption} onPress={() => handleFilter('name')}>
-                <Text style={styles.filterOptionText}>Theo tên A-Z</Text>
+                <Text style={styles.filterOptionText}>Sắp xếp theo tên A-Z</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.filterOption} onPress={() => handleFilter('gpa')}>
                 <Text style={styles.filterOptionText}>Theo GPA cao nhất</Text>
