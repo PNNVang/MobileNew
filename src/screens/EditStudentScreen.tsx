@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TextInput, Alert, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Image, TextInput, Alert, TouchableOpacity} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { styles } from '../styles/editStudentStyles.ts';
 
 const EditStudentScreen = () => {
@@ -70,6 +71,7 @@ const EditStudentScreen = () => {
     return !isNaN(gpaValue) && gpaValue >= 0 && gpaValue <= 4;
   };
 
+  // Hàm xử lý việc gửi form
   const handleSubmit = () => {
     if (!studentInfo.name.trim() || !studentInfo.email.trim()) {
       Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin bắt buộc (*)');
@@ -93,7 +95,7 @@ const EditStudentScreen = () => {
 
     setIsSubmitting(true);
 
-    // gọi API theo id
+    // Gọi API cập nhật thông tin sinh viên theo id
     fetch(`http://10.0.2.2:8080/api/students/${studentInfo.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -124,12 +126,8 @@ const EditStudentScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       {/* Chọn ảnh đại diện */}
       <View style={{ alignItems: 'center', marginBottom: 20 }}>
         <TouchableOpacity onPress={handleChoosePhoto}>
@@ -156,7 +154,12 @@ const EditStudentScreen = () => {
         </TouchableOpacity>
       </View>
 
-          {/* Form */}
+      <KeyboardAwareScrollView
+                  style={{ flex: 1, backgroundColor: '#fff' }}
+                  contentContainerStyle={{ padding: 10 }}
+                  enableOnAndroid={true}
+                  extraScrollHeight={20}>
+          {/* Form cập nhật thông tin sinh viên */}
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Mã số sinh viên *</Text>
@@ -255,9 +258,8 @@ const EditStudentScreen = () => {
               <Text style={styles.cancelButtonText}>Hủy</Text>
             </TouchableOpacity>
           </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
       </View>
-    </KeyboardAvoidingView>
   );
 };
 

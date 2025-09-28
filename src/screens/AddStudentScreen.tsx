@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Alert, TouchableOpacity, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { styles } from '../styles/addStudentStyles';
 import axios from 'axios';
 
@@ -152,7 +153,13 @@ const AddStudentScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Form nhập thông tin */}
+      <KeyboardAwareScrollView
+            style={{ flex: 1, backgroundColor: '#fff' }}
+            contentContainerStyle={{ padding: 10 }}
+            enableOnAndroid={true}
+            extraScrollHeight={20}>
+
+      {/* Form nhập thông tin sinh viên */}
       <View style={styles.formContainer}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Mã số sinh viên *</Text>
@@ -251,6 +258,7 @@ const AddStudentScreen = () => {
           <Text style={styles.cancelButtonText}>Hủy</Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAwareScrollView>
     </View>
   );
 };

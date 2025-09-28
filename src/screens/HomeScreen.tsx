@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Pressable, Image, Modal, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { styles } from '../styles/homeStyles.ts';
@@ -7,21 +7,24 @@ import { styles } from '../styles/homeStyles.ts';
 const HomeScreen = () => {
   const navigation = useNavigation();
 
-  // state sinh viên
+  // State sinh viên
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // state popup chi tiết
+  // State popup thông tin chi tiết sinh viên
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // state lọc
+  // State sắp xếp
   const [filterType, setFilterType] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  // state thống kê
+  // State thống kê
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState<any>(null);
+
+  // State tìm kiếm sinh viên
+  const [searchQuery, setSearchQuery] = useState("");
 
   // gọi API lấy danh sách sinh viên
   const fetchStudents = () => {
@@ -54,10 +57,10 @@ const HomeScreen = () => {
     setSelectedStudent(null);
   };
 
-  // xử lý lọc
+  // Xử lý nút sắp xếp
   const handleFilter = (type: string) => {
     if (type === "gpa") {
-      fetchTopStudents();
+      sortStudentsByGPA();
       setFilterType("gpa");
     } else if (type === "name") {
       setFilterType("name");
@@ -74,6 +77,7 @@ const HomeScreen = () => {
   const getFilteredStudents = () => {
     if (!Array.isArray(students)) return [];
     if (!filterType) return students;
+    // Sắp xếp sinh viên theo tên
     if (filterType === "name") {
       return [...students].sort((a, b) => {
         const lastNameA = a.name.trim().split(" ").slice(-1)[0];
@@ -81,48 +85,40 @@ const HomeScreen = () => {
         return lastNameA.localeCompare(lastNameB);
       });
     }
-    return students; // GPA cao nhất đã lấy từ API
+    return students;
   };
 
+  // Hàm tìm kiếm theo MSSV hoặc Tên
+    const handleSearch = (query: string) => {
+      if (!query.trim()) {
+        // load lại danh sách
+        setLoading(true);
+        fetch("http://10.0.2.2:8080/api/students")
+          .then((res) => res.json())
+          .then((data) => setStudents(data))
+          .catch((err) => console.error("Lỗi load danh sách:", err))
+          .finally(() => setLoading(false));
+        return;
+      }
 
-const [searchQuery, setSearchQuery] = useState("");
-  // 🆕 Hàm tìm kiếm theo MSSV hoặc Tên
-      const handleSearch = () => {
-        if (!searchQuery.trim()) {
-          // Nếu trống → load lại danh sách
-          setLoading(true);
-          fetch("http://10.0.2.2:8080/api/students")
-            .then((res) => res.json())
-            .then((data) => setStudents(data))
-            .catch((err) => console.error("Lỗi load danh sách:", err))
-            .finally(() => setLoading(false));
-          return;
-        }
-
-        //  Tìm kiếm MSSV
-        if (/^\d+$/.test(searchQuery.trim())) {
-          setLoading(true);
-          fetch(`http://10.0.2.2:8080/api/students/mssv/${searchQuery}`)
-            .then((res) => {
-              if (res.status === 404) return null;
-              return res.json();
-            })
-            .then((data) => {
-              if (data) setStudents([data]); // wrap vào mảng
-              else setStudents([]);
-            })
-            .catch((err) => console.error("Lỗi tìm theo MSSV:", err))
-            .finally(() => setLoading(false));
-        } else {
-          // Tìm kiếm theo tên
-          setLoading(true);
-          fetch(`http://10.0.2.2:8080/api/students/search?name=${searchQuery}`)
-            .then((res) => res.json())
-            .then((data) => setStudents(data))
-            .catch((err) => console.error("Lỗi tìm theo tên:", err))
-            .finally(() => setLoading(false));
-        }
-      };
+      if (/^\d+$/.test(query.trim())) {
+        // Tìm MSSV
+        setLoading(true);
+        fetch(`http://10.0.2.2:8080/api/students/mssv/${query}`)
+          .then((res) => (res.status === 404 ? null : res.json()))
+          .then((data) => setStudents(data ? [data] : []))
+          .catch((err) => console.error("Lỗi tìm theo MSSV:", err))
+          .finally(() => setLoading(false));
+      } else {
+        // Tìm tên
+        setLoading(true);
+        fetch(`http://10.0.2.2:8080/api/students/search?name=${query}`)
+          .then((res) => res.json())
+          .then((data) => setStudents(data))
+          .catch((err) => console.error("Lỗi tìm theo tên:", err))
+          .finally(() => setLoading(false));
+      }
+    };
 
       // Gọi API thống kê
       const fetchClassification = async () => {
@@ -135,10 +131,10 @@ const [searchQuery, setSearchQuery] = useState("");
         }
       };
 
-      // gọi API lọc theo GPA
-      const fetchTopStudents = async () => {
+      // Gọi API sắp xếp sinh viên theo GPA
+      const sortStudentsByGPA = async () => {
         try {
-          const res = await axios.get("http://10.0.2.2:8080/api/students/top-gpa");
+          const res = await axios.get("http://10.0.2.2:8080/api/students/sort-by-gpa");
           setStudents(res.data);
         } catch (err) {
           console.error("API error:", err);
@@ -153,20 +149,20 @@ const [searchQuery, setSearchQuery] = useState("");
       <View style={styles.searchContainer}>
             <Image
               source={require("../../assets/icons/search.png")}
-              style={{ width: 20, height: 20, marginRight: 8 }}
-            />
-            <TextInput
-              style={styles.searchStudent}
-              placeholder="Nhập MSSV hoặc tên sinh viên"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-            />
+              style={{ width: 20, height: 20, marginRight: 8 }}/>
+              <TextInput
+                style={styles.searchStudent}
+                placeholder="Nhập MSSV hoặc tên sinh viên"
+                value={searchQuery}
+                onChangeText={(text) => {
+                  setSearchQuery(text);
+                  handleSearch(text); // gọi luôn khi gõ
+                }}
+                returnKeyType="search"/>
           </View>
 
       <ScrollView style={styles.listContainer}>
-        {/* Header + nút lọc */}
+        {/* Header + nút sắp xếp */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>DANH SÁCH SINH VIÊN</Text>
           <TouchableOpacity
@@ -174,21 +170,36 @@ const [searchQuery, setSearchQuery] = useState("");
             style={styles.filterButton}
           >
             <Text style={styles.filterButtonText}>
-              {showFilterMenu ? 'Đóng △' : 'Lọc ▽'}
+              {showFilterMenu ? 'Đóng △' : 'Sắp xếp ▽'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* menu lọc */}
+        {/* Menu sắp xếp */}
         {showFilterMenu && (
           <View style={styles.filterMenuOverlay}>
             <View style={styles.filterMenu}>
-              <TouchableOpacity style={styles.filterOption} onPress={() => handleFilter('name')}>
+              <Pressable
+                onPress={() => handleFilter('name')}
+                style={({ pressed }) => [
+                  styles.filterOption,
+                  filterType === 'name' && { backgroundColor: '#dfe6e9' }, // màu khi đã chọn
+                  pressed && { backgroundColor: '#b2bec3' }, // màu khi đang nhấn
+                ]}
+              >
                 <Text style={styles.filterOptionText}>Sắp xếp theo tên A-Z</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.filterOption} onPress={() => handleFilter('gpa')}>
-                <Text style={styles.filterOptionText}>Theo GPA cao nhất</Text>
-              </TouchableOpacity>
+              </Pressable>
+
+              <Pressable
+                onPress={() => handleFilter('gpa')}
+                style={({ pressed }) => [
+                  styles.filterOption,
+                  filterType === 'gpa' && { backgroundColor: '#dfe6e9' },
+                  pressed && { backgroundColor: '#b2bec3' },
+                ]}
+              >
+                <Text style={styles.filterOptionText}>Sắp xếp theo GPA</Text>
+              </Pressable>
               <TouchableOpacity style={styles.clearFilterButton} onPress={clearFilter}>
                 <Text style={styles.clearFilterText}>Xóa lọc</Text>
               </TouchableOpacity>
@@ -199,6 +210,7 @@ const [searchQuery, setSearchQuery] = useState("");
         {/* Loading */}
         {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
+      <ScrollView style={styles.listStudentContainer}>
         {/* Danh sách sinh viên */}
         {getFilteredStudents().map((student) => (
           <TouchableOpacity
@@ -256,9 +268,10 @@ const [searchQuery, setSearchQuery] = useState("");
             </View>
           </TouchableOpacity>
         ))}
+        </ScrollView>
       </ScrollView>
 
-      {/* popup chi tiết */}
+      {/* Popup thông tin chi tiết sinh viên */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={closeStudentDetail}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -314,39 +327,41 @@ const [searchQuery, setSearchQuery] = useState("");
         </View>
       </Modal>
 
-    {/* Nút xem thống kê */}
-          <TouchableOpacity
-            style={styles.statsButton}
-            onPress={() => {
-              fetchClassification();
-              setShowStats(true);
-            }}
-          >
-            <Text style={styles.statsButtonText}>Xem thống kê</Text>
-          </TouchableOpacity>
+ {/* Nút mở thống kê */}
+ <TouchableOpacity
+   style={styles.statsButton}
+   onPress={() => {
+     fetchClassification();
+     setShowStats(true);
+   }}
+ >
+   <Text style={styles.statsButtonText}>Xem thống kê</Text>
+ </TouchableOpacity>
 
-          {/* Modal thống kê */}
-          <Modal visible={showStats} transparent animationType="slide">
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Thống kê xếp loại</Text>
-                {stats && (
-                  <View style={styles.modalBody}>
-                    <Text>Xuất sắc: {stats["Xuất sắc"]}</Text>
-                    <Text>Giỏi: {stats["Giỏi"]}</Text>
-                    <Text>Khá: {stats["Khá"]}</Text>
-                    <Text>Trung bình/Yếu: {stats["Trung bình/Yếu"]}</Text>
-                  </View>
-                )}
-                <TouchableOpacity
-                  style={styles.closeModalButton}
-                  onPress={() => setShowStats(false)}
-                >
-                  <Text style={styles.closeModalText}>Đóng</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+ {/* Modal thống kê */}
+ <Modal visible={showStats} transparent animationType="fade">
+   <View style={styles.modalStatisticOverlay}>
+     <View style={styles.modalStatisticContent}>
+       <Text style={styles.modalStatisticTitle}>Thống kê xếp loại</Text>
+
+       {stats && (
+         <View style={styles.modalStatisticBody}>
+           <Text style={styles.statItem}>✨ Xuất sắc: <Text style={styles.bold}>{stats["Xuất sắc"]}</Text></Text>
+           <Text style={styles.statItem}>🏅 Giỏi: <Text style={styles.bold}>{stats["Giỏi"]}</Text></Text>
+           <Text style={styles.statItem}>👍 Khá: <Text style={styles.bold}>{stats["Khá"]}</Text></Text>
+           <Text style={styles.statItem}>📉 Trung bình/Yếu: <Text style={styles.bold}>{stats["Trung bình/Yếu"]}</Text></Text>
+         </View>
+       )}
+
+       <TouchableOpacity
+         style={styles.closeModalButton}
+         onPress={() => setShowStats(false)}
+       >
+         <Text style={styles.closeModalText}>Đóng</Text>
+       </TouchableOpacity>
+     </View>
+   </View>
+ </Modal>
       {/* nút thêm sinh viên */}
       <TouchableOpacity
         style={styles.addStudent}
